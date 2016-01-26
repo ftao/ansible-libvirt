@@ -1,0 +1,28 @@
+---
+- name: ip_forward | directory
+  file:
+    dest: "{{ libvirt_host_qemu_machine_hooks_folder }}/{{ libvirt_result_domain_name }}"
+    state: directory
+
+- name: ip_forward | name
+  set_fact:
+    libvirt_tmp_ip_forward_hook_script: >
+      {{
+        [ libvirt_host_qemu_machine_hooks_folder,
+          libvirt_result_domain_name,
+          "ip_forward_%(ip)s" | format(
+            ip = source_ip | replace('/', 's'),
+          )
+        ] | join('/')
+      }}
+
+- name: ip_forward | create
+  template:
+    dest: "{{ libvirt_tmp_ip_forward_hook_script }}"
+    src: iptables-ip-forward.sh.j2
+    mode: "0744"
+  register: ip_forward_result
+
+- name: ip_forward | run
+  command: "{{ libvirt_tmp_ip_forward_hook_script }} start"
+  when: ip_forward_result.changed

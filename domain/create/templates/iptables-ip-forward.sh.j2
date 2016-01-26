@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -e
+set -u
+
+iptables='/sbin/iptables'
+
+source_ip="{{ source_ip }}"
+destination_ip="{{ destination_ip}}"
+
+update() {
+  action="$1"
+
+  `${iptables} -t nat ${action} PREROUTING -d ${source_ip} -j DNAT --to-destination ${destination_ip}`
+  `${iptables} -t nat ${action} POSTROUTING -s ${destination_ip} -j SNAT --to-source ${source_ip}`
+}
+
+task="$1"
+
+case "${task}" in
+        start)
+                update " -I "
+        ;;
+        stopped)
+                update " -D "
+        ;;
+esac

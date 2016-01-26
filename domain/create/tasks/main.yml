@@ -48,6 +48,11 @@
   destination_port: "{{ libvirt_winrm_guest_port }}"
   when: (libvirt_result_winrm_port | int) > 0
 
+- include: ip_forward.yml
+  source_ip: "{{ libvirt_host_forward_source_ip }}"
+  destination_ip: "{{ libvirt_result_ip_address }}"
+  when: (libvirt_host_forward_enable and libvirt_host_forward_source_ip) > 0
+
 - include: store_facts.yml
 
 - name: wait for ssh
@@ -61,4 +66,5 @@
     timeout: 60 # seconds
   delegate_to: 127.0.0.1
   with_items: libvirt_domain_names
-  when: (libvirt_result_winrm_port | int) <= 0
+  when: (libvirt_result_winrm_port | int) <= 0  and (libvirt_result_ssh_port|int > 0)
+       
